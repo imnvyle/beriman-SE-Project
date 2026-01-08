@@ -9,13 +9,42 @@
                     <h3 class="font-bold text-lg">{{ $event->title }}</h3>
                     <p class="text-xs text-gray-500 mb-4">{{ $event->event_date }}</p>
                     
-                    <div class="flex space-x-2">
-                        <a href="{{ route('events.edit', $event->id) }}" class="flex-1 bg-blue-100 text-blue-700 text-center py-2 rounded-lg font-bold">Edit</a>
-                        <form action="{{ route('events.destroy', $event->id) }}" method="POST" class="flex-1">
-                            @csrf
-                            @method('DELETE')
-                            <button class="w-full bg-red-100 text-red-700 py-2 rounded-lg font-bold">Delete</button>
-                        </form>
+                    <div class="flex space-x-2" x-data="{ confirmDelete: false }">
+                        <!-- Edit button -->
+                        <a href="{{ route('events.edit', $event->id) }}" 
+                           class="flex-1 bg-blue-100 text-blue-700 text-center py-2 rounded-lg font-bold">
+                            Edit
+                        </a>
+
+                        <!-- Delete trigger -->
+                        <button @click="confirmDelete = true" 
+                                class="flex-1 bg-red-100 text-red-700 py-2 rounded-lg font-bold">
+                            Delete
+                        </button>
+
+                        <!-- Confirm modal -->
+                        <div x-show="confirmDelete" x-cloak
+                             class="fixed inset-0 flex items-center justify-center bg-black/50 z-50">
+                            <div class="bg-white p-6 rounded-2xl shadow-lg w-full max-w-sm">
+                                <h3 class="text-lg font-bold mb-4">Are you sure?</h3>
+                                <p class="text-gray-600 mb-6">This action cannot be undone.</p>
+
+                                <div class="flex justify-end space-x-3">
+                                    <button @click="confirmDelete = false"
+                                            class="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300">
+                                        Cancel
+                                    </button>
+                                    <form action="{{ route('events.destroy', $event->id) }}" method="POST">
+                                        @csrf
+                                        @method('DELETE')
+                                        <button type="submit"
+                                                class="px-4 py-2 rounded-lg bg-red-600 text-white font-bold">
+                                            Yes, Delete
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             @empty

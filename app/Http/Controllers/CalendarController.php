@@ -11,87 +11,60 @@ class CalendarController extends Controller
 {
     public function index(Request $request)
     {
-        $year  = (int)($request->input('year', now()->year));
-        $month = (int)($request->input('month', now()->month));
+        $year   = (int)($request->input('year', now()->year));
+        $month  = (int)($request->input('month', now()->month));
+        $filter = $request->input('filter', 'all');
 
         $firstDay    = Carbon::create($year, $month, 1);
-        $daysInMonth = $firstDay->daysInMonth;
-        $startDay    = $firstDay->dayOfWeek;
+        $endOfMonth  = $firstDay->copy()->endOfMonth();
         $today       = Carbon::today()->toDateString();
 
-        // Build dates array
-        $dates = [];
-        for ($i = 0; $i < $startDay; $i++) {
-            $dates[] = null;
-        }
-        for ($d = 1; $d <= $daysInMonth; $d++) {
-            $dates[] = Carbon::create($year, $month, $d)->toDateString();
-        }
-
-        // Events for this month
-        $events = Event::whereBetween(
-                'event_date',
-                [$firstDay->toDateString(), $firstDay->copy()->endOfMonth()->toDateString()]
-            )
-            ->orderBy('event_date')
-            ->get();
-
-        $eventsByDate = $events->groupBy(fn($e) => Carbon::parse($e->event_date)->toDateString());
-
-        // Favourites from pivot table
+        // Favourite IDs
         $favIds = DB::table('event_user')
             ->where('user_id', auth()->id())
             ->pluck('event_id');
 
-        // Find next favourite event
-        $nextFav = collect($eventsByDate)
-            ->flatMap(fn($evs, $date) => collect($evs)->map(fn($e) => [
-                'date'  => $date,
-                'event' => $e,
-                'isFav' => $favIds->contains($e->id),
-            ]))
-            ->filter(fn($x) => $x['isFav'] && $x['date'] >= $today)
-            ->sortBy('date')
-            ->first();
+        // Events for calendar grid (month only)
+        $eventsQuery = Event::whereBetween('event_date', [$firstDay, $endOfMonth])
+            ->orderBy('event_date');
 
-        $monthName = $firstDay->format('F Y');
+        if ($filter === 'fav') {
+            $eventsQuery->whereIn('id', $favIds);
+        }
+
+        $events = $eventsQuery->get();
+        $eventsByDate = $events->groupBy(fn($e) => Carbon::parse($e->event_date)->toDateString());
+
+        // All upcoming favourites (from today onwards, not limited to month)
+        $allUpcomingFavs = Event::whereIn('id', $favIds)
+            ->whereDate('event_date', '>=', $today)
+            ->orderBy('event_date')
+            ->get();
 
         return view('events.calendar', [
-            'year'         => $year,
-            'month'        => $month,
-            'dates'        => $dates,
-            'today'        => $today,
-            'eventsByDate' => $eventsByDate,
-            'favIds'       => $favIds,
-            'nextFav'      => $nextFav,
-            'monthName'    => $monthName,
+            'year'            => $year,
+            'month'           => $month,
+            'dates'           => $this->buildDates($year, $month),
+            'today'           => $today,
+            'eventsByDate'    => $eventsByDate,
+            'favIds'          => $favIds,
+            'allUpcomingFavs' => $allUpcomingFavs,
+            'monthName'       => $firstDay->format('F Y'),
+            'filter'          => $filter,
         ]);
     }
 
-    // Export events as ICS file
-    public function export()
+    private function buildDates($year, $month)
     {
-        $events = Event::where('user_id', auth()->id())->get();
+        $firstDay    = Carbon::create($year, $month, 1);
+        $daysInMonth = $firstDay->daysInMonth;
+        $startDay    = $firstDay->dayOfWeek;
 
-        $ics = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//YourApp//EN\r\n";
-
-        foreach ($events as $event) {
-            $start = Carbon::parse($event->event_date)->format('Ymd\THis');
-            $end   = Carbon::parse($event->event_date)->addHours(2)->format('Ymd\THis');
-
-            $ics .= "BEGIN:VEVENT\r\n";
-            $ics .= "SUMMARY:{$event->title}\r\n";
-            $ics .= "DTSTART:$start\r\n";
-            $ics .= "DTEND:$end\r\n";
-            $ics .= "DESCRIPTION:{$event->description}\r\n";
-            $ics .= "LOCATION:{$event->venue}\r\n";
-            $ics .= "END:VEVENT\r\n";
+        $dates = [];
+        for ($i = 0; $i < $startDay; $i++) $dates[] = null;
+        for ($d = 1; $d <= $daysInMonth; $d++) {
+            $dates[] = Carbon::create($year, $month, $d)->toDateString();
         }
-
-        $ics .= "END:VCALENDAR\r\n";
-
-        return response($ics)
-            ->header('Content-Type', 'text/calendar')
-            ->header('Content-Disposition', 'attachment; filename="events.ics"');
+        return $dates;
     }
 }
