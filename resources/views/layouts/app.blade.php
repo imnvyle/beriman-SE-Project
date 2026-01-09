@@ -9,98 +9,73 @@
 </head>
 <body class="font-sans antialiased bg-gray-100"
       x-data="{
-          sidebarOpen: JSON.parse(localStorage.getItem('sidebarOpen') || 'false'),
+          sidebarOpen: JSON.parse(localStorage.getItem('sidebarOpen') || 'true'),
           toggleSidebar() {
               this.sidebarOpen = !this.sidebarOpen;
               localStorage.setItem('sidebarOpen', JSON.stringify(this.sidebarOpen));
           }
       }">
 
-    <div class="flex h-screen">
+    <!-- Sidebar (fixed) -->
+    <aside class="fixed top-0 left-0 h-screen bg-white shadow-lg border-r transition-all duration-300 ease-out"
+           :class="sidebarOpen ? 'w-64' : 'w-0'">
+        <div class="p-6 flex flex-col h-full overflow-y-auto" x-show="sidebarOpen" x-cloak>
+            <!-- Logo -->
+            <div class="mb-8 flex justify-center">
+                <span class="text-2xl font-extrabold text-blue-600">Eventify</span>
+            </div>
 
-        <!-- Sidebar -->
-        <aside class="bg-white shadow-lg border-r transition-[width] duration-300 ease-out"
-               :class="sidebarOpen ? 'w-64' : 'w-0'">
-            <div class="p-6 flex flex-col h-full" x-show="sidebarOpen" x-cloak>
-                <!-- Logo -->
-                <div class="mb-8 flex justify-center">
-                    <span class="text-2xl font-extrabold text-blue-600">Eventify</span>
-                </div>
+            <!-- Navigation -->
+            <nav class="space-y-2 flex-grow">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">Main Menu</p>
+                <a href="{{ route('dashboard') }}" class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
+                    <span class="mr-3">🏠</span> Home
+                </a>
+                <a href="{{ route('events.all') }}" class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('events.all') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
+                    <span class="mr-3">🌐</span> All Events
+                </a>
+                <a href="{{ route('events.favourites') }}" class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('events.favourites') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
+                    <span class="mr-3">⭐</span> Favourites
+                </a>
+                <a href="{{ route('calendar.index') }}" class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('calendar.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
+                    <span class="mr-3">📅</span> Calendar
+                </a>
+                <hr class="my-6 border-gray-100">
+                <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">Promoter Tools</p>
+                <a href="{{ route('my-events') }}" class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('my-events') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
+                    <span class="mr-3">🛠️</span> Your Events
+                </a>
+            </nav>
 
-                <!-- Navigation -->
-                <nav class="space-y-2 flex-grow">
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">Main Menu</p>
+            <!-- CTA -->
+            <div class="mt-auto pt-6">
+                <a href="{{ route('events.create') }}"
+                   class="flex items-center justify-center p-4 rounded-2xl font-black bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all duration-200">
+                    <span class="mr-2 text-xl">+</span> Post New Event
+                </a>
+            </div>
+        </div>
+    </aside>
 
-                    <a href="{{ route('dashboard') }}"
-                       class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('dashboard') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
-                        <span class="mr-3">🏠</span> Home
-                    </a>
-
-                    <a href="{{ route('events.all') }}"
-                       class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('events.all') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
-                        <span class="mr-3">🌐</span> All Events
-                    </a>
-
-                    <a href="{{ route('events.favourites') }}"
-                       class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('events.favourites') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
-                        <span class="mr-3">⭐</span> Favourites
-                    </a>
-
-                    <a href="{{ route('calendar.index') }}"
-                       class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('calendar.index') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
-                        <span class="mr-3">📅</span> Calendar
-                    </a>
-
-                    <hr class="my-6 border-gray-100">
-
-                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest px-3 mb-2">Promoter Tools</p>
-
-                    <a href="{{ route('my-events') }}"
-                       class="flex items-center p-3 rounded-xl font-bold {{ request()->routeIs('my-events') ? 'bg-blue-50 text-blue-600' : 'text-gray-600 hover:bg-gray-50' }}">
-                        <span class="mr-3">🛠️</span> Your Events
-                    </a>
-                </nav>
-
-                <!-- CTA -->
-                <div class="mt-auto pt-6">
-                    <a href="{{ route('events.create') }}"
-                       class="flex items-center justify-center p-4 rounded-2xl font-black bg-blue-600 text-white shadow-lg shadow-blue-200 hover:bg-blue-700 hover:-translate-y-1 transition-all duration-200">
-                        <span class="mr-2 text-xl">+</span> Post New Event
-                    </a>
+    <!-- Header (fixed, adjusts with sidebar) -->
+    <header class="fixed top-0 right-0 z-40 bg-white border-b shadow-sm transition-all duration-300 ease-out"
+            :class="sidebarOpen ? 'left-64' : 'left-0'">
+        <div class="flex justify-between items-center p-4">
+            <!-- Left side -->
+            <div class="flex items-center gap-3">
+                <button @click="toggleSidebar()" class="p-2 rounded-lg hover:bg-gray-100">
+                    <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M4 6h16M4 12h16M4 18h16"/>
+                    </svg>
+                </button>
+                <div class="flex flex-col">
+                    <span class="font-extrabold text-lg text-blue-600 tracking-wide">Eventify</span>
+                    <span class="text-xs text-gray-400 italic">Discover • Share • Celebrate</span>
                 </div>
             </div>
-        </aside>
 
-        <!-- Main content -->
-        <div class="flex-1 flex flex-col min-w-0 bg-gray-100">
-
-            <!-- Top bar -->
-            <div class="flex justify-between items-center p-4 bg-white border-b shadow-sm">
-
-                <!-- Left side: Hamburger + Brand -->
-                <div class="flex items-center gap-3">
-                    <!-- Hamburger -->
-                    <button @click="toggleSidebar()" 
-                            class="p-2 rounded-lg hover:bg-gray-100"
-                            aria-label="Toggle sidebar">
-                        <svg class="w-6 h-6 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                  d="M4 6h16M4 12h16M4 18h16"/>
-                        </svg>
-                    </button>
-
-                    <!-- Plain text brand -->
-                    <div class="flex flex-col">
-                        <span class="font-extrabold text-lg text-blue-600 tracking-wide">
-                            Eventify
-                        </span>
-                        <span class="text-xs text-gray-400 italic">
-                            Discover • Share • Celebrate
-                        </span>
-                    </div>
-                </div>
-
-                <!-- Right side: Bell + Profile -->
+                 <!-- Right side: Bell + Profile -->
                 <div class="flex items-center space-x-4">
                     <!-- Bell -->
                     <div class="relative" x-data="{ showBellPopup: false }">
@@ -150,13 +125,15 @@
                     </div>
                 </div>
             </div>
+    </header>
 
-            <!-- Main slot -->
-            <main class="p-8 pb-20">
-                {{ $slot }}
-            </main>
+    <!-- Main content (scrollable, adjusts automatically) -->
+    <main class="pt-20 transition-all duration-300 ease-out"
+          :class="sidebarOpen ? 'ml-64' : 'ml-0'">
+        <div class="p-8 pb-20">
+            {{ $slot }}
         </div>
-    </div>
+    </main>
 
 </body>
 </html>
