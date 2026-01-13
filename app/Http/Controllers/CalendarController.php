@@ -67,4 +67,24 @@ class CalendarController extends Controller
         }
         return $dates;
     }
+
+    public function export()
+    {
+        $events = Event::orderBy('event_date')->get();
+
+        $ics  = "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nCALSCALE:GREGORIAN\r\n";
+        foreach ($events as $event) {
+            $date = Carbon::parse($event->event_date)->format('Ymd');
+
+            $ics .= "BEGIN:VEVENT\r\n";
+            $ics .= "SUMMARY:{$event->title}\r\n";
+            $ics .= "DTSTART:{$date}\r\n";
+            $ics .= "END:VEVENT\r\n";
+        }
+        $ics .= "END:VCALENDAR";
+
+        return response($ics)
+            ->header('Content-Type', 'text/calendar')
+            ->header('Content-Disposition', 'attachment; filename="events.ics"');
+    }
 }
