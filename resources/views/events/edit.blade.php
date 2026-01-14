@@ -2,7 +2,7 @@
     <div class="py-6 px-4 max-w-3xl mx-auto">
         <h2 class="text-2xl font-bold mb-6">Edit Event</h2>
 
-        <form action="{{ route('events.update', $event->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+        <form id="eventForm" action="{{ route('events.update', $event->id) }}" method="POST" enctype="multipart/form-data" class="space-y-4">
             @csrf
             @method('PUT')
 
@@ -43,5 +43,63 @@
                 <button type="submit" class="px-4 py-2 rounded-xl bg-blue-600 text-white font-bold">Update Event</button>
             </div>
         </form>
+
+        <script>
+            const form = document.getElementById('eventForm');
+            let formChanged = false;
+
+            // Store original values
+            const originalData = {};
+            form.querySelectorAll('input, textarea, select').forEach(el => {
+                originalData[el.name] = el.value;
+            });
+
+            // Detect real changes
+            form.querySelectorAll('input, textarea, select').forEach(el => {
+                el.addEventListener('input', () => {
+                    formChanged = Array.from(form.elements).some(field => {
+                        if (!field.name) return false;
+                        return field.value !== originalData[field.name];
+                    });
+                });
+            });
+
+            // On submit (Update)
+            form.addEventListener('submit', () => {
+                formChanged = false;
+            });
+
+            // Browser unload warning
+            window.addEventListener('beforeunload', function (e) {
+                if (formChanged) {
+                    e.preventDefault();
+                    e.returnValue = '';
+                }
+            });
+
+            // Cancel / Back button
+            const cancelBtn = document.getElementById('cancelBtn');
+            if (cancelBtn) {
+                cancelBtn.addEventListener('click', function () {
+                    if (!formChanged || confirm('You have unsaved changes. Are you sure you want to discard them?')) {
+                        window.location.href = "{{ route('events.all') }}";
+                    }
+                });
+            }
+
+            // Intercept navigation
+            document.querySelectorAll('a[href]').forEach(link => {
+                link.addEventListener('click', function (e) {
+                    if (formChanged) {
+                        const leave = confirm(
+                            'You have unsaved changes. Are you sure you want to discard them?'
+                        );
+                        if (!leave) {
+                            e.preventDefault();
+                        }
+                    }
+                });
+            });
+        </script>
     </div>
 </x-app-layout>
